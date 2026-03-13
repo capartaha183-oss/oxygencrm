@@ -7,10 +7,6 @@ workflows:
     scripts:
       - flutter pub get
       - flutter build ios --release --no-codesign
-      - mkdir -p $CM_BUILD_DIR/output/ipa
-      - cd $CM_BUILD_DIR/build/ios/Release-iphoneos
-      - mkdir -p Payload
-      - cp -r Runner.app Payload/
-      - zip -r $CM_BUILD_DIR/output/ipa/Runner.ipa Payload/
+      - find $CM_BUILD_DIR/build -name "*.app" -type d
     artifacts:
-      - output/ipa/*.ipa
+      - build/ios/**/*.ipa
