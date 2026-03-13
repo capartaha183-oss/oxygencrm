@@ -48,11 +48,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
         clients += clientList.length;
       }
 
-      statuses.add({
-        'name': server.name,
-        'ip': '${server.ip}:${server.port}',
-        'online': online,
-      });
+      statuses.add({'name': server.name, 'ip': '${server.ip}:${server.port}', 'online': online});
     }
 
     if (mounted) {
@@ -77,136 +73,96 @@ class _OverviewScreenState extends State<OverviewScreen> {
       backgroundColor: AppTheme.surface,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Hoş geldin, ${AuthService.currentUser ?? 'Admin'}',
-                      style: GoogleFonts.spaceGrotesk(
-                        color: AppTheme.textPrimary, fontSize: 22, fontWeight: FontWeight.w600,
+              Expanded(child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Hoş geldin, ${AuthService.currentUser ?? 'Admin'}',
+                    style: GoogleFonts.spaceGrotesk(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.w600)),
+                  Text(_getDateString(), style: GoogleFonts.jetBrainsMono(color: AppTheme.textSecondary, fontSize: 11)),
+                ],
+              )),
+              _loading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accent))
+                  : GestureDetector(
+                      onTap: _loadData,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        decoration: BoxDecoration(color: AppTheme.surface, border: Border.all(color: AppTheme.border), borderRadius: BorderRadius.circular(3)),
+                        child: Row(children: [
+                          const Icon(Icons.refresh, size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 5),
+                          Text('Yenile', style: GoogleFonts.jetBrainsMono(color: AppTheme.textSecondary, fontSize: 11)),
+                        ]),
                       ),
                     ),
-                    Text(_getDateString(), style: GoogleFonts.jetBrainsMono(
-                      color: AppTheme.textSecondary, fontSize: 12,
-                    )),
-                  ],
-                ),
-              ),
-              if (_loading)
-                const SizedBox(
-                  width: 18, height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accent),
-                )
-              else
-                GestureDetector(
-                  onTap: _loadData,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      border: Border.all(color: AppTheme.border),
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: Row(children: [
-                      const Icon(Icons.refresh, size: 14, color: AppTheme.textSecondary),
-                      const SizedBox(width: 6),
-                      Text('Yenile', style: GoogleFonts.jetBrainsMono(
-                        color: AppTheme.textSecondary, fontSize: 11,
-                      )),
-                    ]),
-                  ),
-                ),
             ]),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             if (totalCount == 0)
               _noServersBanner()
             else ...[
-              Row(children: [
-                _stat('SUNUCULAR', '$onlineCount / $totalCount online',
-                    Icons.router_outlined, AppTheme.accent,
-                    onlineCount == totalCount ? 'Hepsi online' : '${ServerStore.offlineCount} offline'),
-                const SizedBox(width: 16),
-                _stat('TOPLAM SORGU', _formatNumber(_totalQueries),
-                    Icons.query_stats_rounded, AppTheme.accentGreen, 'tüm sunucular'),
-                const SizedBox(width: 16),
-                _stat('ENGELLENDİ', _formatNumber(_totalBlocked),
-                    Icons.block_rounded, AppTheme.accentRed,
-                    _totalQueries > 0
-                        ? '%${(_totalBlocked / _totalQueries * 100).toStringAsFixed(1)}'
-                        : '-'),
-                const SizedBox(width: 16),
-                _stat('BAĞLI CİHAZ', '$_totalClients',
-                    Icons.devices_rounded, AppTheme.accentOrange, 'toplam'),
-              ]),
-              const SizedBox(height: 24),
-
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Stats grid - 2x2 on mobile
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.6,
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: _panel('SUNUCU DURUMU', Column(
-                      children: _serverStatuses.isEmpty
-                          ? [Center(child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Text('Veri yükleniyor...',
-                                style: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 12)),
-                            ))]
-                          : _serverStatuses.map((s) => _serverRow(s)).toList(),
-                    )),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 2,
-                    child: _panel('GENEL DURUM', Column(
-                      children: [
-                        _infoRow('Toplam Sunucu', '$totalCount'),
-                        _infoRow('Online', '$onlineCount'),
-                        _infoRow('Offline', '${ServerStore.offlineCount}'),
-                        _infoRow('Toplam Sorgu', _formatNumber(_totalQueries)),
-                        _infoRow('Engellenen', _formatNumber(_totalBlocked)),
-                        _infoRow('Bağlı Cihaz', '$_totalClients'),
-                        const SizedBox(height: 16),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.card,
-                            borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: AppTheme.border),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('ENGELLEME ORANI', style: GoogleFonts.jetBrainsMono(
-                                color: AppTheme.textMuted, fontSize: 9, letterSpacing: 2,
-                              )),
-                              const SizedBox(height: 4),
-                              Text(
-                                _totalQueries > 0
-                                    ? '%${(_totalBlocked / _totalQueries * 100).toStringAsFixed(2)}'
-                                    : '-%',
-                                style: GoogleFonts.spaceGrotesk(
-                                  color: AppTheme.accentRed, fontSize: 28, fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Text('son 24 saat', style: GoogleFonts.jetBrainsMono(
-                                color: AppTheme.textSecondary, fontSize: 11,
-                              )),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )),
-                  ),
+                  _stat('SUNUCULAR', '$onlineCount/$totalCount', Icons.router_outlined, AppTheme.accent, 'online'),
+                  _stat('SORGU', _formatNumber(_totalQueries), Icons.query_stats_rounded, AppTheme.accentGreen, 'toplam'),
+                  _stat('ENGELLENDİ', _formatNumber(_totalBlocked), Icons.block_rounded, AppTheme.accentRed,
+                    _totalQueries > 0 ? '%${(_totalBlocked / _totalQueries * 100).toStringAsFixed(1)}' : '-'),
+                  _stat('CİHAZ', '$_totalClients', Icons.devices_rounded, AppTheme.accentOrange, 'bağlı'),
                 ],
+              ),
+              const SizedBox(height: 16),
+
+              if (_serverStatuses.isNotEmpty) ...[
+                _sectionTitle('SUNUCU DURUMU'),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: AppTheme.surface, border: Border.all(color: AppTheme.border), borderRadius: BorderRadius.circular(4)),
+                  child: Column(children: _serverStatuses.map((s) => _serverRow(s)).toList()),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              _sectionTitle('GENEL DURUM'),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: AppTheme.surface, border: Border.all(color: AppTheme.border), borderRadius: BorderRadius.circular(4)),
+                child: Column(children: [
+                  _infoRow('Toplam Sunucu', '$totalCount'),
+                  _infoRow('Online', '$onlineCount'),
+                  _infoRow('Offline', '${ServerStore.offlineCount}'),
+                  _infoRow('Toplam Sorgu', _formatNumber(_totalQueries)),
+                  _infoRow('Engellenen', _formatNumber(_totalBlocked)),
+                  _infoRow('Bağlı Cihaz', '$_totalClients'),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: AppTheme.card, borderRadius: BorderRadius.circular(3), border: Border.all(color: AppTheme.border)),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('ENGELLEME ORANI', style: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 9, letterSpacing: 2)),
+                      const SizedBox(height: 4),
+                      Text(
+                        _totalQueries > 0 ? '%${(_totalBlocked / _totalQueries * 100).toStringAsFixed(2)}' : '-%',
+                        style: GoogleFonts.spaceGrotesk(color: AppTheme.accentRed, fontSize: 28, fontWeight: FontWeight.w700),
+                      ),
+                      Text('son 24 saat', style: GoogleFonts.jetBrainsMono(color: AppTheme.textSecondary, fontSize: 11)),
+                    ]),
+                  ),
+                ]),
               ),
             ],
           ],
@@ -215,110 +171,58 @@ class _OverviewScreenState extends State<OverviewScreen> {
     );
   }
 
+  Widget _sectionTitle(String t) => Text(t, style: GoogleFonts.jetBrainsMono(
+    color: AppTheme.textMuted, fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.w600,
+  ));
+
   Widget _noServersBanner() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(4),
-      ),
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(color: AppTheme.surface, border: Border.all(color: AppTheme.border), borderRadius: BorderRadius.circular(4)),
       child: Column(children: [
-        const Icon(Icons.dns_outlined, color: AppTheme.textMuted, size: 48),
-        const SizedBox(height: 16),
-        Text('Henüz sunucu eklenmedi', style: GoogleFonts.spaceGrotesk(
-          color: AppTheme.textMuted, fontSize: 16,
-        )),
-        const SizedBox(height: 8),
-        Text('Sol menüden "Sunucular" sekmesine giderek AdGuard sunucusu ekleyin.',
-          style: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 12),
-          textAlign: TextAlign.center,
-        ),
+        const Icon(Icons.dns_outlined, color: AppTheme.textMuted, size: 40),
+        const SizedBox(height: 12),
+        Text('Henüz sunucu eklenmedi', style: GoogleFonts.spaceGrotesk(color: AppTheme.textMuted, fontSize: 15)),
+        const SizedBox(height: 6),
+        Text('Sunucular sekmesinden AdGuard sunucusu ekleyin.',
+          style: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 11), textAlign: TextAlign.center),
       ]),
     );
   }
 
   Widget _stat(String label, String value, IconData icon, Color color, String sub) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          border: Border.all(color: AppTheme.border),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Icon(icon, color: color, size: 14),
-              const SizedBox(width: 8),
-              Expanded(child: Text(label, style: GoogleFonts.jetBrainsMono(
-                color: AppTheme.textMuted, fontSize: 9, letterSpacing: 2,
-              ))),
-            ]),
-            const SizedBox(height: 10),
-            Text(value, style: GoogleFonts.spaceGrotesk(
-              color: AppTheme.textPrimary, fontSize: 22, fontWeight: FontWeight.w700,
-            )),
-            Text(sub, style: GoogleFonts.jetBrainsMono(
-              color: color.withOpacity(0.7), fontSize: 11,
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _panel(String title, Widget child) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: GoogleFonts.jetBrainsMono(
-            color: AppTheme.textMuted, fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.w600,
-          )),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppTheme.surface, border: Border.all(color: AppTheme.border), borderRadius: BorderRadius.circular(4)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(icon, color: color, size: 13),
+          const SizedBox(width: 6),
+          Expanded(child: Text(label, style: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 8, letterSpacing: 1.5), overflow: TextOverflow.ellipsis)),
+        ]),
+        const SizedBox(height: 6),
+        Text(value, style: GoogleFonts.spaceGrotesk(color: AppTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
+        Text(sub, style: GoogleFonts.jetBrainsMono(color: color.withOpacity(0.7), fontSize: 10)),
+      ]),
     );
   }
 
   Widget _serverRow(Map<String, dynamic> s) {
     final online = s['online'] as bool;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(children: [
-        Container(
-          width: 8, height: 8,
-          decoration: BoxDecoration(
-            color: online ? AppTheme.accentGreen : AppTheme.accentRed,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(s['name'], style: GoogleFonts.spaceGrotesk(
-              color: AppTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w500,
-            )),
-            Text(s['ip'], style: GoogleFonts.jetBrainsMono(
-              color: AppTheme.textSecondary, fontSize: 11,
-            )),
-          ],
+        Container(width: 8, height: 8, decoration: BoxDecoration(
+          color: online ? AppTheme.accentGreen : AppTheme.accentRed, shape: BoxShape.circle,
         )),
+        const SizedBox(width: 10),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(s['name'], style: GoogleFonts.spaceGrotesk(color: AppTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w500)),
+          Text(s['ip'], style: GoogleFonts.jetBrainsMono(color: AppTheme.textSecondary, fontSize: 10)),
+        ])),
         Text(online ? 'ONLINE' : 'OFFLINE', style: GoogleFonts.jetBrainsMono(
-          color: online ? AppTheme.accentGreen : AppTheme.accentRed,
-          fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.w600,
+          color: online ? AppTheme.accentGreen : AppTheme.accentRed, fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.w600,
         )),
       ]),
     );
@@ -326,14 +230,10 @@ class _OverviewScreenState extends State<OverviewScreen> {
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(children: [
-        Expanded(child: Text(label, style: GoogleFonts.jetBrainsMono(
-          color: AppTheme.textMuted, fontSize: 11,
-        ))),
-        Text(value, style: GoogleFonts.jetBrainsMono(
-          color: AppTheme.textPrimary, fontSize: 11, fontWeight: FontWeight.w600,
-        )),
+        Expanded(child: Text(label, style: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 11))),
+        Text(value, style: GoogleFonts.jetBrainsMono(color: AppTheme.textPrimary, fontSize: 11, fontWeight: FontWeight.w600)),
       ]),
     );
   }
@@ -347,8 +247,7 @@ class _OverviewScreenState extends State<OverviewScreen> {
   String _getDateString() {
     final now = DateTime.now();
     const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
   }
 }

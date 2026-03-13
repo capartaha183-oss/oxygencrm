@@ -24,81 +24,45 @@ class DNSRecordsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  style: GoogleFonts.jetBrainsMono(color: AppTheme.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'Filter records...',
-                    hintStyle: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 13),
-                    prefixIcon: const Icon(Icons.filter_list, color: AppTheme.textMuted, size: 18),
-                    filled: true,
-                    fillColor: AppTheme.surface,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(3),
-                      borderSide: const BorderSide(color: AppTheme.border),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(3),
-                      borderSide: const BorderSide(color: AppTheme.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(3),
-                      borderSide: const BorderSide(color: AppTheme.accent),
-                    ),
-                  ),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                style: GoogleFonts.jetBrainsMono(color: AppTheme.textPrimary, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Kayıt filtrele...',
+                  hintStyle: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 13),
+                  prefixIcon: const Icon(Icons.filter_list, color: AppTheme.textMuted, size: 18),
+                  filled: true,
+                  fillColor: AppTheme.surface,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(3), borderSide: const BorderSide(color: AppTheme.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(3), borderSide: const BorderSide(color: AppTheme.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(3), borderSide: const BorderSide(color: AppTheme.accent)),
                 ),
               ),
-              const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.add, size: 16),
-                label: Text('ADD RECORD', style: GoogleFonts.jetBrainsMono(
-                  fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1,
-                )),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accent,
-                  foregroundColor: AppTheme.bg,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
-                  elevation: 0,
-                ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.add, size: 16),
+              label: Text('EKLE', style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accent,
+                foregroundColor: AppTheme.bg,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3)),
+                elevation: 0,
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
+            ),
+          ]),
+          const SizedBox(height: 16),
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                border: Border.all(color: AppTheme.border),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: AppTheme.border)),
-                    ),
-                    child: Row(children: [
-                      _th('ZONE', 2), _th('NAME', 2), _th('TYPE', 1),
-                      _th('VALUE', 3), _th('TTL', 1), _th('', 1),
-                    ]),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _records.length,
-                      itemBuilder: (ctx, i) => _row(_records[i], i),
-                    ),
-                  ),
-                ],
-              ),
+            child: ListView.builder(
+              itemCount: _records.length,
+              itemBuilder: (ctx, i) => _card(_records[i]),
             ),
           ),
         ],
@@ -106,65 +70,53 @@ class DNSRecordsScreen extends StatelessWidget {
     );
   }
 
-  Widget _th(String label, int flex) => Expanded(
-    flex: flex,
-    child: Text(label, style: GoogleFonts.jetBrainsMono(
-      color: AppTheme.textMuted, fontSize: 9, letterSpacing: 2, fontWeight: FontWeight.w600,
-    )),
-  );
-
-  Widget _row(Map<String, String> r, int i) {
+  Widget _card(Map<String, String> r) {
     final typeColor = _typeColors[r['type']] ?? AppTheme.textSecondary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: i.isEven ? Colors.transparent : AppTheme.card.withOpacity(0.3),
-        border: const Border(bottom: BorderSide(color: AppTheme.border, width: 0.5)),
+        color: AppTheme.surface,
+        border: Border.all(color: AppTheme.border),
+        borderRadius: BorderRadius.circular(4),
       ),
-      child: Row(
-        children: [
-          Expanded(flex: 2, child: Text(r['zone']!, style: GoogleFonts.jetBrainsMono(
-            color: AppTheme.textSecondary, fontSize: 12,
-          ))),
-          Expanded(flex: 2, child: Text(r['name']!, style: GoogleFonts.jetBrainsMono(
-            color: AppTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w500,
-          ))),
-          Expanded(flex: 1, child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: typeColor.withOpacity(0.08),
-              border: Border.all(color: typeColor.withOpacity(0.3)),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: Text(r['type']!, textAlign: TextAlign.center,
-              style: GoogleFonts.jetBrainsMono(
-                color: typeColor, fontSize: 9, letterSpacing: 1, fontWeight: FontWeight.w700,
-              ),
-            ),
+      child: Row(children: [
+        Container(
+          width: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          decoration: BoxDecoration(
+            color: typeColor.withOpacity(0.08),
+            border: Border.all(color: typeColor.withOpacity(0.3)),
+            borderRadius: BorderRadius.circular(2),
+          ),
+          child: Text(r['type']!, textAlign: TextAlign.center, style: GoogleFonts.jetBrainsMono(
+            color: typeColor, fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w700,
           )),
-          Expanded(flex: 3, child: Text(r['value']!, style: GoogleFonts.jetBrainsMono(
-            color: AppTheme.textSecondary, fontSize: 12,
-          ))),
-          Expanded(flex: 1, child: Text('${r['ttl']}s', style: GoogleFonts.jetBrainsMono(
-            color: AppTheme.textMuted, fontSize: 11,
-          ))),
-          Expanded(flex: 1, child: Row(children: [
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 15, color: AppTheme.textSecondary),
-              onPressed: () {},
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(4),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, size: 15, color: AppTheme.accentRed),
-              onPressed: () {},
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.all(4),
-            ),
-          ])),
-        ],
-      ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Text(r['name']!, style: GoogleFonts.jetBrainsMono(
+                color: AppTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w600,
+              )),
+              const SizedBox(width: 6),
+              Expanded(child: Text(r['zone']!, style: GoogleFonts.jetBrainsMono(
+                color: AppTheme.textMuted, fontSize: 10,
+              ), overflow: TextOverflow.ellipsis)),
+            ]),
+            const SizedBox(height: 3),
+            Text(r['value']!, style: GoogleFonts.jetBrainsMono(
+              color: AppTheme.textSecondary, fontSize: 11,
+            ), overflow: TextOverflow.ellipsis),
+            Text('TTL: ${r['ttl']}s', style: GoogleFonts.jetBrainsMono(color: AppTheme.textMuted, fontSize: 10)),
+          ]),
+        ),
+        Row(children: [
+          IconButton(icon: const Icon(Icons.edit_outlined, size: 15, color: AppTheme.textSecondary), onPressed: () {}, constraints: const BoxConstraints(), padding: const EdgeInsets.all(4)),
+          IconButton(icon: const Icon(Icons.delete_outline, size: 15, color: AppTheme.accentRed), onPressed: () {}, constraints: const BoxConstraints(), padding: const EdgeInsets.all(4)),
+        ]),
+      ]),
     );
   }
 }
