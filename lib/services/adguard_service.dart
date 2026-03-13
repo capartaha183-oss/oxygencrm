@@ -9,6 +9,7 @@ class AdGuardServer {
   final String username;
   final String password;
   bool isOnline;
+  String? _sessionCookie;
 
   AdGuardServer({
     required this.id,
@@ -23,11 +24,13 @@ class AdGuardServer {
   String get baseUrl => 'http://$ip:$port';
 
   Map<String, String> get headers {
-    final credentials = base64Encode(utf8.encode('$username:$password'));
-    return {
-      'Authorization': 'Basic $credentials',
+    final h = <String, String>{
       'Content-Type': 'application/json',
     };
+    if (_sessionCookie != null) {
+      h['Cookie'] = _sessionCookie!;
+    }
+    return h;
   }
 
   Map<String, dynamic> toJson() => {
@@ -72,12 +75,43 @@ class AdGuardStats {
 }
 
 class AdGuardService {
+  // Önce login yap, session cookie al
+  static Future<bool> _login(AdGuardServer server) async {
+    try {
+      final res = await http.post(
+        Uri.parse('${server.baseUrl}/control/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': server.username,
+          'password': server.password,
+        }),
+      ).timeout(const Duration(seconds: 5));
+
+      if (res.statusCode == 200) {
+        // Session cookie'yi kaydet
+        final cookie = res.headers['set-cookie'];
+        if (cookie != null) {
+          server._sessionCookie = cookie.split(';').first;
+        }
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<bool> checkStatus(AdGuardServer server) async {
     try {
+      // Önce login ol
+      final loggedIn = await _login(server);
+      if (!loggedIn) return false;
+
       final res = await http.get(
         Uri.parse('${server.baseUrl}/control/status'),
         headers: server.headers,
       ).timeout(const Duration(seconds: 5));
+
       return res.statusCode == 200;
     } catch (_) {
       return false;
