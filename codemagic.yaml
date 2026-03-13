@@ -7,7 +7,7 @@ workflows:
     scripts:
       - flutter pub get
       - flutter build ios --release --no-codesign
-      - xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release -archivePath build/Runner.xcarchive archive CODE_SIGNING_ALLOWED=NO
-      - xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ios/ExportOptions.plist -exportPath build/ios/ipa CODE_SIGNING_ALLOWED=NO
+      - mkdir -p build/ios/ipa
+      - cd build/ios/Release-iphoneos && mkdir -p Payload && cp -r Runner.app Payload/ && zip -r ../../../ios/ipa/Runner.ipa Payload/
     artifacts:
       - build/ios/ipa/*.ipa
